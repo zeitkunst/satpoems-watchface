@@ -18,7 +18,7 @@ static GRect bounds;
 static int pageScroll = 140;
 
 static uint8_t scrollPeriod = 10; // Scroll every scrollPeriod seconds
-static uint8_t poemPeriod  = 10; // Update poem every poemPeriod seconds
+static uint8_t poemPeriod  = 1; // Update poem every poemPeriod minutes
 
 
 bool scrollForwards = true;
@@ -117,16 +117,21 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
     // In poem, talk about the time the satellite was overhead
 
     // Update poem every 10 minutes or so
+    // Check the minute
     if (tick_time->tm_min % poemPeriod == 0) {
-        // Begin dictionary
-        DictionaryIterator *iter;
-        app_message_outbox_begin(&iter);
-
-        // Add a key-value pair
-        dict_write_uint8(iter, 0, 0);
-
-        app_message_outbox_send();
-        APP_LOG(APP_LOG_LEVEL_INFO, "Updating poem");
+        // and then unsure that we only do this once during the minute
+        if (tick_time->tm_sec % 60 == 0) {
+            // Begin dictionary
+            DictionaryIterator *iter;
+            app_message_outbox_begin(&iter);
+    
+            // Add a key-value pair
+            dict_write_uint8(iter, 0, 0);
+    
+            app_message_outbox_send();
+            scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, 0), true);
+            APP_LOG(APP_LOG_LEVEL_INFO, "Updating poem");
+        }
     }
 
 }
