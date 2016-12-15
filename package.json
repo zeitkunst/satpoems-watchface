@@ -1,0 +1,61 @@
+{
+  "name": "watchface",
+  "author": "Liminal Poetics",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "capabilities":["location"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Sat Poems",
+    "uuid": "ca37f5da-f71a-4488-8235-d794bacaa148",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "TEMPERATURE",
+      "CONDITIONS",
+      "POEM"
+    ],
+    "resources": {
+      "media": [
+        {
+            "type":"font",
+            "name":"FONT_PERFECT_DOS_48",
+            "file":"fonts/perfect-dos-vga.ttf",
+            "compatibility":"2.7"
+        },
+        {
+            "type":"font",
+            "name":"FONT_PERFECT_DOS_20",
+            "file":"fonts/perfect-dos-vga.ttf",
+            "compatibility":"2.7"
+        },
+        {
+            "type":"font",
+            "name":"FONT_PERFECT_DOS_18",
+            "file":"fonts/perfect-dos-vga.ttf",
+            "compatibility":"2.7"
+        },
+        {
+            "type":"font",
+            "name":"FONT_IMFELL_PICA_28",
+            "file":"fonts/IMFePIrm29C.ttf"
+        },
+        {
+            "type":"bitmap",
+            "name":"IMAGE_BACKGROUND",
+            "file":"images/background.png"
+        }
+      ]
+    }
+  }
+}
