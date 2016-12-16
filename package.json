@@ -46,6 +46,7 @@
             "compatibility":"2.7"
         },
         {
+            "characterRegex":"[\u0000-\u00FF\u201C\u201D]",
             "type":"font",
             "name":"FONT_IMFELL_PICA_28",
             "file":"fonts/IMFePIrm29C.ttf"

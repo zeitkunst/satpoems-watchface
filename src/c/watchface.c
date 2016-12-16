@@ -1,3 +1,6 @@
+// Working with more than 3-byte unicode glyphs:
+// https://forums.pebble.com/t/how-can-i-filter-3-byte-unicode-characters-glyphs-in-ttf/26024
+//
 #include <pebble.h>
 
 static Window *s_main_window;
