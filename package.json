@@ -1,7 +1,7 @@
 {
-  "name": "watchface",
+  "name": "satpoems",
   "author": "Liminal Poetics",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "keywords": ["pebble-app"],
   "capabilities":["location"],
   "private": true,
