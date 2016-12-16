@@ -18,7 +18,7 @@ static GRect bounds;
 static int pageScroll = 140;
 
 static uint8_t scrollPeriod = 10; // Scroll every scrollPeriod seconds
-static uint8_t poemPeriod  = 1; // Update poem every poemPeriod minutes
+static uint8_t poemPeriod  = 10; // Update poem every poemPeriod minutes
 
 
 bool scrollForwards = true;
@@ -99,10 +99,6 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
 
         }
 
-        
-
-        //scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, content_offset.y - 140), true);
-
     } 
 
     // Update time every minute    
@@ -116,7 +112,7 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
     // Update satellites overhead every 5-15 minutes
     // In poem, talk about the time the satellite was overhead
 
-    // Update poem every 10 minutes or so
+    // Update poem every poemPeriod minutes
     // Check the minute
     if (tick_time->tm_min % poemPeriod == 0) {
         // and then unsure that we only do this once during the minute
@@ -129,6 +125,8 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
             dict_write_uint8(iter, 0, 0);
     
             app_message_outbox_send();
+
+            // Reset scroll layer
             scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, 0), true);
             APP_LOG(APP_LOG_LEVEL_INFO, "Updating poem");
         }
@@ -138,16 +136,6 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     update_time();
-
-    /*
-    // This is how we scroll automatically without user intervention!
-    // Need to refine it...
-    GSize content_size = scroll_layer_get_content_size(s_scroll_layer);
-    GPoint content_offset = scroll_layer_get_content_offset(s_scroll_layer);
-
-    scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, content_offset.y - 40), true);
-    */
-
 }
 
 static void main_window_load(Window *window) {
@@ -204,7 +192,7 @@ static void main_window_load(Window *window) {
     text_layer_set_overflow_mode(s_poem_layer, GTextOverflowModeWordWrap);
     //text_layer_set_text(s_poem_layer, "This is a longish poem just a test nothing more. And here is some more text it's super long isn't it there just isn't much else that we can do here. Oh but we can continue going can't we and make this as long as we'd like oh yes we can oh yes we can we just continue going and going and going like that bunny yes we can oh yes yes yes.");
     //text_layer_set_text(s_poem_layer, "This is a longish poem just a test nothing more. ");
-    text_layer_set_text(s_poem_layer, "");
+    text_layer_set_text(s_poem_layer, "Waiting to know the objects above...");
     text_layer_set_font(s_poem_layer, s_poem_font);
 
 
@@ -328,7 +316,8 @@ static void init() {
 
     window_set_background_color(s_main_window, GColorBlack);
 
-    tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+    // Only one subscription to this service is allowed
+    //tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
     tick_timer_service_subscribe(SECOND_UNIT, tick_handler_seconds);
 
     window_stack_push(s_main_window, true);
