@@ -1,6 +1,16 @@
+// To convert from OTF to TTF:
+//  fontforge -script scripts/otf2ttf.sh FONTNAME.otf 
+//
 // Working with more than 3-byte unicode glyphs:
 // https://forums.pebble.com/t/how-can-i-filter-3-byte-unicode-characters-glyphs-in-ttf/26024
 //
+// TODO
+// * Figure out how to properly calculate the size of the scroll window for a given font size, have to take into account descenders, need to ensure that we scroll by an integral amount of maximum height + descenders
+// * I like Fell English at 24, but need to recalculate the sizes accordingly
+// * Try different fonts, sans-serif fonts too, also for the time line below 
+// * Try text for time too
+// * Also ensure that the lat, long coordinates are correct of W longitude!
+
 #include <pebble.h>
 
 static Window *s_main_window;
@@ -18,7 +28,13 @@ static GFont s_poem_font;
 
 static GRect bounds;
 
-static int pageScroll = 140;
+// Size 24: 24 pixels high plus around 8 for descenders, then 24 pixels for each line, and -1 to make pixel "perfect"
+static int fontSize = 24; // in pixels (?)
+static int descenderSize = 8; // in pixels (?)
+static int numLines = 5; // total number of lines we'd like to display on screen at this font size
+int scrollSize, pageScroll;
+
+//static int pageScroll = 140;
 
 static uint8_t scrollPeriod = 10; // Scroll every scrollPeriod seconds
 static uint8_t poemPeriod  = 10; // Update poem every poemPeriod minutes
@@ -74,31 +90,14 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
             // Check and see if we should continue scrolling
             // We continue scrolling if our absOffset + our scrolling page 
             // is >= our content size
-            if ((absOffset + pageScroll) >= (int)content_size.h) {
+            if ((absOffset + pageScroll + descenderSize) >= (int)content_size.h) {
                 // Return to start
                 APP_LOG(APP_LOG_LEVEL_INFO, "HERE");
                 scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, 0), true);
 
-                /*
-                // Scroll backwards
-                scrollForwards = false;
-                scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, content_offset.y + pageScroll), true);
-                */
             } else {
                 scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, content_offset.y - pageScroll), true);
             }
-
-            /*
-             * I think this is cruft...
-            if (!scrollForwards) {
-                scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, content_offset.y + pageScroll), true);
-
-            } else {
-                // Continue scrolling forwards
-                scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, content_offset.y - pageScroll), true);
-
-            }
-            */
 
         }
 
@@ -143,6 +142,13 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
 static void main_window_load(Window *window) {
     uint8_t margin = 4;
+
+    //static int scrollSize = 32 + 24 + 24 + 24 + 24 - 1;
+    scrollSize = (fontSize + descenderSize) + (numLines - 1) * fontSize;
+    // The amount we scroll is based on the point size, and does not include the descenders
+    //static int pageScroll = 5 * 24;
+    pageScroll = numLines * fontSize;
+
    
     // Get information about the window
     Layer *window_layer = window_get_root_layer(window);
@@ -156,11 +162,12 @@ static void main_window_load(Window *window) {
     s_weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_20));
 
     // Create poem font
-    s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_IMFELL_PICA_28));
+    //s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_IMFELL_ENGLISH_28));
+    s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ADOBE_JENSON_24));
     //s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_20));
 
     // Create scroll layer
-    s_scroll_layer = scroll_layer_create(GRect(margin, PBL_IF_ROUND_ELSE(margin + 5, margin), bounds.size.w - (margin * 2), pageScroll));
+    s_scroll_layer = scroll_layer_create(GRect(margin, PBL_IF_ROUND_ELSE(margin + 5, margin), bounds.size.w - (margin * 2), scrollSize));
     //s_scroll_layer = scroll_layer_create(bounds);
 
     // This binds the scroll layer to the window so that up/down map to scrolling
@@ -278,12 +285,18 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         snprintf(poem_layer_buffer, sizeof(poem_layer_buffer), "%s", poem_buffer);
         text_layer_set_text(s_poem_layer, poem_layer_buffer);
 
+        // TODO
+        // Calculate all of this properly based off of the size of the text + descenders and such
         GSize content_size = text_layer_get_content_size(s_poem_layer);
+        // TODO: REMEMBER that we have to add the descender height to the total content size height
+        content_size.h = content_size.h + 8;
         GPoint content_offset = scroll_layer_get_content_offset(s_scroll_layer);
         text_layer_set_size(s_poem_layer, content_size);
-        scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, content_size.h + 4));
+        scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, scrollSize * (((int)content_size.h/scrollSize) + 1)));
+
         APP_LOG(APP_LOG_LEVEL_INFO, "initial y content offset: %d", (int)content_offset.y);
         APP_LOG(APP_LOG_LEVEL_INFO, "initial y content size: %d", (int)content_size.h);
+        APP_LOG(APP_LOG_LEVEL_INFO, "total size of content: %d", scrollSize * (((int)content_size.h/scrollSize) + 1));
 
 
     }

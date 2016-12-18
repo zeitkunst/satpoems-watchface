@@ -1,5 +1,5 @@
 {
-  "name": "satpoems",
+  "name": "watchface",
   "author": "Liminal Poetics",
   "version": "0.1.0",
   "keywords": ["pebble-app"],
@@ -7,7 +7,7 @@
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "Sat Poems",
+    "displayName": "Satellite Poems",
     "uuid": "ca37f5da-f71a-4488-8235-d794bacaa148",
     "sdkVersion": "3",
     "enableMultiJS": true,
@@ -51,6 +51,19 @@
             "name":"FONT_IMFELL_PICA_28",
             "file":"fonts/IMFePIrm29C.ttf"
         },
+        {
+            "characterRegex":"[\u0000-\u00FF\u201C\u201D]",
+            "type":"font",
+            "name":"FONT_IMFELL_ENGLISH_28",
+            "file":"fonts/IMFeENrm29C.ttf"
+        },
+        {
+            "characterRegex":"[\u0000-\u00FF\u201C\u201D]",
+            "type":"font",
+            "name":"FONT_ADOBE_JENSON_24",
+            "file":"fonts/AJensonPro-Regular.ttf"
+        },
+
         {
             "type":"bitmap",
             "name":"IMAGE_BACKGROUND",

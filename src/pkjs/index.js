@@ -46,9 +46,9 @@ function locationSuccess(pos) {
     );
     */
 
-    var satsURL = 'http://api.zeitkunst.org/sats/pebble/poem/42.294615,71.302342,185';
-    // TODO: Need to check whether longitude is W or not, probably need to fix
-    //var satsURL = 'http://api.zeitkunst.org/sats/pebble/poem/' + pos.coords.latitude + "," + pos.coords.longitude;
+    //var satsURL = 'http://api.zeitkunst.org/sats/pebble/poem/42.294615,71.302342,185';
+    // Give longitude in E longitude, coordinate change happens on the server
+    var satsURL = 'http://api.zeitkunst.org/sats/pebble/poem/' + pos.coords.latitude + "," + pos.coords.longitude;
 
     // Send request to OpenWeatherMap
     xhrRequest(satsURL, 'GET',
