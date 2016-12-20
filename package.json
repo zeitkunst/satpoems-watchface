@@ -1,5 +1,5 @@
 {
-  "name": "watchface",
+  "name": "sat-poems",
   "author": "Liminal Poetics",
   "version": "0.1.0",
   "keywords": ["pebble-app"],
@@ -21,8 +21,7 @@
       "watchface": true
     },
     "messageKeys": [
-      "TEMPERATURE",
-      "CONDITIONS",
+      "TITLE",
       "POEM"
     ],
     "resources": {

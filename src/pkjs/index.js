@@ -57,11 +57,13 @@ function locationSuccess(pos) {
             var sats = JSON.parse(responseText);
 
             console.log("Lat, long: " + pos.coords.latitude + ", " + pos.coords.longitude);
+            console.log(sats["title"]);
             console.log(sats["poem"]);
 
 
             // Assemble dictionary using our keys
             var dictionary = {
+                "TITLE":sats["title"],
                 "POEM":sats["poem"]
             };
 
