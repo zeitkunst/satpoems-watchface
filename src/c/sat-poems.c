@@ -22,7 +22,7 @@
 
 #include <pebble.h>
 
-// State machine for satellite poem
+// State machine variables for satellite poem
 typedef enum
 {
     STATE_START = 0,
@@ -36,21 +36,25 @@ uint8_t state_periods[] = {
     1,
     3,
     2,
-    0,
+    0, // we don't move forward in STATE_POEM based on periods
     2
 };
 
 satellite_state_t satellite_state = STATE_START;
 static uint8_t current_period = 0;
 
+// Margin for text, in pixels
 uint8_t margin = 4;
 
+// Layers and fonts
 static Window *s_main_window;
 static Layer *window_layer;
 
 static TextLayer *s_time_layer;
+static GFont s_time_font;
 
 static TextLayer *s_poem_layer;
+static GFont s_poem_font;
 
 static TextLayer *s_title_layer = NULL;
 static GFont s_title_font;
@@ -58,32 +62,32 @@ static const char *default_title = "A SATELLITE POEM";
 
 static ScrollLayer *s_scroll_layer;
 
-static GFont s_time_font;
-static GFont s_poem_font;
-
+// Screen bounds
 static GRect bounds;
 
+// Calculations for scrolling based on font size
+// Probably need to change when we change fonts for text on scroll layer
 // Size 24: 24 pixels high plus around 8 for descenders, then 24 pixels for each line, and -1 to make pixel "perfect"
 static int fontSize = 24; // in pixels (?)
 static int descenderSize = 8; // in pixels (?)
 static int numLines = 5; // total number of lines we'd like to display on screen at this font size
 int scrollSize, pageScroll;
 
-//static int pageScroll = 140;
-
-static uint8_t scrollPeriod = 2; // Scroll every scrollPeriod seconds
+// Duration of periods
+static uint8_t updatePeriod = 2; // Scroll every updatePeriod seconds
 static uint8_t poemPeriod  = 1; // Update poem every poemPeriod minutes
 
 
-bool scrollForwards = true;
-
-// Store incoming information
+// Buffers for incoming information
 static char title_buffer[256] = {0};
 static char title_layer_buffer[256] = {0};
 
 static char poem_buffer[2048];
 static char poem_layer_buffer[2048];
 
+/*
+ * Create title layer with optional default title
+ */
 static void generate_title_layer(char *title) {
     uint8_t text_height = 20 + 8 + 20 + 20;
     s_title_layer = text_layer_create(
@@ -107,6 +111,9 @@ static void generate_title_layer(char *title) {
     layer_add_child(window_layer, text_layer_get_layer(s_title_layer));
 }
 
+/*
+ * Methods for showing and hiding text and scroll layers
+ */
 static void show_title_layer(void) {
     layer_set_hidden((Layer *)s_title_layer, false);
 }
@@ -125,7 +132,9 @@ static void hide_title_layer(void) {
     layer_set_hidden((Layer *)s_title_layer, true);
 }
 
-
+/*
+ * Update time and write to buffer
+ */
 static void update_time() {
     // Get a tm structure
     time_t temp = time(NULL);
@@ -139,6 +148,9 @@ static void update_time() {
     text_layer_set_text(s_time_layer, s_buffer);
 }
 
+/*
+ * Scroll text area forward each updatePeriod
+ */
 static void scroll_poem(void) {
     int absOffset;
 
@@ -158,7 +170,6 @@ static void scroll_poem(void) {
     // This is probably horribly inefficient, need to see if there is something better
     // If we're at the top, scroll by a page
     if ((int)content_offset.y == 0) {
-        scrollForwards = true;
         scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, content_offset.y - pageScroll), true);
     } else {
         // We seem to be scrolled somehow
@@ -180,10 +191,13 @@ static void scroll_poem(void) {
 
 }
 
+/*
+ * Main handler for moving through our state machine, updating time, etc.
+ */
 static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) {
 
-    // Scroll every scrollPeriod seconds
-    if (tick_time->tm_sec % scrollPeriod == 0) {
+    // Update every updatePeriod seconds
+    if (tick_time->tm_sec % updatePeriod == 0) {
         
         APP_LOG(APP_LOG_LEVEL_INFO, "Current state: %d", satellite_state);
         switch (satellite_state) {
@@ -217,6 +231,8 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
                 break;
             case STATE_POEM:
 
+                // Before scrolling, we could probably change our updatePeriod
+                // to something different than the other periods
                 scroll_poem();
 
                 break;
@@ -267,6 +283,9 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
 
 }
 
+/*
+ * Set up window, layers, and fonts
+ */
 static void main_window_load(Window *window) {
 
     //static int scrollSize = 32 + 24 + 24 + 24 + 24 - 1;
@@ -356,6 +375,9 @@ static void main_window_load(Window *window) {
     snprintf(title_layer_buffer, sizeof(title_layer_buffer), "%s", default_title);
 }
 
+/*
+ * Destory variables so that we don't leak memory
+ */
 static void main_window_unload(Window *window) {
     // Destory TextLayer
     text_layer_destroy(s_time_layer);
@@ -376,6 +398,9 @@ static void main_window_unload(Window *window) {
 
 }
 
+/*
+ * Handle incoming data from phone/javascript
+ */
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
     // Read tuples for data
     Tuple *poem_tuple = dict_find(iterator, MESSAGE_KEY_POEM);
@@ -414,16 +439,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
 }
 
+/*
+ * Deal with callback and inbox issues
+ */
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped! Reason: %d", (int)reason);
-
-    /*
-     * This doesn't seem to work
-    if (reason == APP_MSG_BUSY) {
-        window_stack_pop_all(false);
-    }
-    */
-
 }
 
 static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
@@ -434,6 +454,9 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
     APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
+/*
+ * Initialize window, callbacks, handlers
+ */
 static void init() {
     s_main_window = window_create();
 
@@ -464,11 +487,17 @@ static void init() {
     update_time();
 }
 
+/*
+ * Destroy window
+ */
 static void deinit() {
     // Destroy window
     window_destroy(s_main_window);
 }
 
+/*
+ * Main app loop
+ */
 int main(void) {
     init();
     app_event_loop();
