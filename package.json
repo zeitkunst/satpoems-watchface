@@ -51,6 +51,14 @@
             "file":"fonts/IMFePIrm29C.ttf"
         },
         {
+            "characterRegex":"[\u0000-\u00FF\u201C\u201D\u2013\u2014]",
+            "type":"font",
+            "name":"FONT_CHARIS_SIL_24",
+            "file":"fonts/CharisSIL-R.ttf",
+            "compatibility":"2.7"
+        },
+
+        {
             "characterRegex":"[\u0000-\u00FF\u201C\u201D]",
             "type":"font",
             "name":"FONT_IMFELL_ENGLISH_28",
@@ -62,6 +70,19 @@
             "name":"FONT_ADOBE_JENSON_24",
             "file":"fonts/AJensonPro-Regular.ttf"
         },
+        {
+            "type":"font",
+            "name":"FONT_ANDIKA_20",
+            "file":"fonts/Andika-R.ttf",
+            "compatibility":"2.7"
+        },
+        {
+            "type":"font",
+            "name":"FONT_DELICIOUS_20",
+            "file":"fonts/Delicious-Roman.ttf",
+            "compatibility":"2.7"
+        },
+
 
         {
             "type":"bitmap",

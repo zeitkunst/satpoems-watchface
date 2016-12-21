@@ -9,6 +9,7 @@
 // * I like Fell English at 24, but need to recalculate the sizes accordingly
 // * Try different fonts, sans-serif fonts too, also for the time line below 
 // * Try text for time too
+// * Generative poem, for Lisa only, that takes pyephem data for Sun, Moon, planets, asteroids (!), and creates poem based off of that
 
 /*
  * State machine for these poems:
@@ -93,7 +94,8 @@ static void generate_title_layer(char *title) {
     s_title_layer = text_layer_create(
             GRect(margin, PBL_IF_ROUND_ELSE(84 - (text_height/2), 84 - (text_height/2)), bounds.size.w - (2 * margin), text_height));
 
-    s_title_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ADOBE_JENSON_24));
+    //s_title_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ADOBE_JENSON_24));
+    s_title_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_CHARIS_SIL_24));
 
     // Improve the layout to be more like a watchface
     text_layer_set_background_color(s_title_layer, GColorClear);
@@ -178,7 +180,7 @@ static void scroll_poem(void) {
         // is >= our content size
         if ((absOffset + pageScroll + descenderSize) >= (int)content_size.h) {
             // Return to start
-            APP_LOG(APP_LOG_LEVEL_INFO, "HERE");
+            //APP_LOG(APP_LOG_LEVEL_INFO, "HERE");
             scroll_layer_set_content_offset(s_scroll_layer, GPoint(0, 0), true);
             hide_scroll_layer();
             satellite_state = STATE_BLANK_2;
@@ -301,11 +303,13 @@ static void main_window_load(Window *window) {
     GRect max_text_bounds = GRect(0, 0, bounds.size.w - (margin * 2), 2000);
 
     // Create time GFont
-    s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_20));
+    s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ANDIKA_20));
+    //s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DELICIOUS_20));
 
     // Create poem font
     //s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_IMFELL_ENGLISH_28));
-    s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ADOBE_JENSON_24));
+    //s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ADOBE_JENSON_24));
+    s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_CHARIS_SIL_24));
     //s_poem_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_20));
 
     // Create scroll layer
