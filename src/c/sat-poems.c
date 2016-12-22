@@ -75,7 +75,9 @@ static int numLines = 5; // total number of lines we'd like to display on screen
 int scrollSize, pageScroll;
 
 // Duration of periods
-static uint8_t updatePeriod = 2; // Scroll every updatePeriod seconds
+//static uint8_t updatePeriod = 6; // Scroll every updatePeriod seconds
+static uint8_t updatePeriod = 1; // Scroll every updatePeriod seconds
+//static uint8_t poemPeriod  = 10; // Update poem every poemPeriod minutes
 static uint8_t poemPeriod  = 1; // Update poem every poemPeriod minutes
 
 
@@ -332,7 +334,9 @@ static void main_window_load(Window *window) {
     // Style poem layer text
     text_layer_set_background_color(s_poem_layer, GColorClear);
     text_layer_set_text_color(s_poem_layer, GColorWhite);
-    //text_layer_set_text_alignment(s_poem_layer, GTextAlignmentCenter);
+#if defined(PBL_ROUND)
+    text_layer_set_text_alignment(s_poem_layer, GTextAlignmentCenter);
+#endif
     text_layer_set_overflow_mode(s_poem_layer, GTextOverflowModeWordWrap);
     //text_layer_set_text(s_poem_layer, "This is a longish poem just a test nothing more. And here is some more text it's super long isn't it there just isn't much else that we can do here. Oh but we can continue going can't we and make this as long as we'd like oh yes we can oh yes we can we just continue going and going and going like that bunny yes we can oh yes yes yes.");
     //text_layer_set_text(s_poem_layer, "This is a longish poem just a test nothing more. ");
@@ -374,6 +378,10 @@ static void main_window_load(Window *window) {
     // Add scroll layer to window
     layer_add_child(window_layer, scroll_layer_get_layer(s_scroll_layer));
     hide_scroll_layer();
+
+#if defined(PBL_ROUND)
+    text_layer_enable_screen_text_flow_and_paging(s_poem_layer, 4);
+#endif
 
     // Create default title
     snprintf(title_layer_buffer, sizeof(title_layer_buffer), "%s", default_title);
@@ -430,7 +438,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         // Calculate all of this properly based off of the size of the text + descenders and such
         GSize content_size = text_layer_get_content_size(s_poem_layer);
         // TODO: REMEMBER that we have to add the descender height to the total content size height
-        content_size.h = content_size.h + 8;
+        content_size.h = content_size.h + 8 + 20;
         GPoint content_offset = scroll_layer_get_content_offset(s_scroll_layer);
         text_layer_set_size(s_poem_layer, content_size);
         scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, scrollSize * (((int)content_size.h/scrollSize) + 1)));
