@@ -70,15 +70,15 @@ static GRect bounds;
 // Probably need to change when we change fonts for text on scroll layer
 // Size 24: 24 pixels high plus around 8 for descenders, then 24 pixels for each line, and -1 to make pixel "perfect"
 static int fontSize = 24; // in pixels (?)
-static int descenderSize = 8; // in pixels (?)
+static int descenderSize = 6; // in pixels (?)
 static int numLines = 5; // total number of lines we'd like to display on screen at this font size
 int scrollSize, pageScroll;
 
 // Duration of periods
-//static uint8_t updatePeriod = 6; // Scroll every updatePeriod seconds
-static uint8_t updatePeriod = 1; // Scroll every updatePeriod seconds
-//static uint8_t poemPeriod  = 10; // Update poem every poemPeriod minutes
-static uint8_t poemPeriod  = 1; // Update poem every poemPeriod minutes
+static uint8_t updatePeriod = 6; // Scroll every updatePeriod seconds
+//static uint8_t updatePeriod = 1; // Scroll every updatePeriod seconds
+static uint8_t poemPeriod  = 10; // Update poem every poemPeriod minutes
+//static uint8_t poemPeriod  = 1; // Update poem every poemPeriod minutes
 
 
 // Buffers for incoming information
@@ -436,7 +436,14 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
         // TODO
         // Calculate all of this properly based off of the size of the text + descenders and such
-        GSize content_size = text_layer_get_content_size(s_poem_layer);
+        //GSize content_size = text_layer_get_content_size(s_poem_layer);
+    GSize content_size = graphics_text_layout_get_content_size(
+            text_layer_get_text(s_poem_layer),
+            s_poem_font,
+            GRect(0, 0, bounds.size.w - (margin * 2), 5000),
+            GTextAlignmentLeft,
+            GTextOverflowModeWordWrap);
+
         // TODO: REMEMBER that we have to add the descender height to the total content size height
         content_size.h = content_size.h + 8 + 20;
         GPoint content_offset = scroll_layer_get_content_offset(s_scroll_layer);
