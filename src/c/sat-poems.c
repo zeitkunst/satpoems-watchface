@@ -22,6 +22,7 @@
  */
 
 #include <pebble.h>
+#define TIMER_PERIOD 500
 
 // State machine variables for satellite poem
 typedef enum
@@ -33,13 +34,8 @@ typedef enum
     STATE_BLANK_2
 } satellite_state_t;
 
-uint8_t state_periods[] = {
-    1,
-    3,
-    2,
-    0, // we don't move forward in STATE_POEM based on periods
-    2
-};
+
+
 
 satellite_state_t satellite_state = STATE_START;
 static uint8_t current_period = 0;
@@ -74,11 +70,35 @@ static int descenderSize = 6; // in pixels (?)
 static int numLines = 5; // total number of lines we'd like to display on screen at this font size
 int scrollSize, pageScroll;
 
+//Keeping track of state time
+AppTimer *stateTimer; // Timer for checking our state
+int currentStateTime = 0; // Counter for keeping track of time
+
 // Duration of periods
-static uint8_t updatePeriod = 6; // Scroll every updatePeriod seconds
+static uint8_t updatePeriod = 4; // Scroll every updatePeriod seconds
 //static uint8_t updatePeriod = 1; // Scroll every updatePeriod seconds
 static uint8_t poemPeriod  = 10; // Update poem every poemPeriod minutes
 //static uint8_t poemPeriod  = 1; // Update poem every poemPeriod minutes
+
+// TODO
+// These periods are tied to the updatePeriod variable...I think we need to change it to be based on milliseconds or some other time-based value
+uint8_t state_periods[] = {
+    1,
+    1,
+    1,
+    0, // we don't move forward in STATE_POEM based on periods
+    1
+};
+
+// Amount of time to stay in each state, based on the granularity of the timer
+int state_times[] = {
+    1 * TIMER_PERIOD,
+    4 * TIMER_PERIOD,
+    1 * TIMER_PERIOD,
+    8 * TIMER_PERIOD, 
+    1 * TIMER_PERIOD
+};
+
 
 
 // Buffers for incoming information
@@ -152,6 +172,7 @@ static void update_time() {
     text_layer_set_text(s_time_layer, s_buffer);
 }
 
+
 /*
  * Scroll text area forward each updatePeriod
  */
@@ -195,12 +216,84 @@ static void scroll_poem(void) {
 
 }
 
+/**
+ * Timer that gets called every TIMER_PERIOD milliseconds to deal with state changes
+ */
+static void stateTimerCallback(void *data) {
+
+    switch (satellite_state) {
+        case STATE_START:
+            if (currentStateTime < state_times[STATE_START]) {
+
+                currentStateTime += TIMER_PERIOD;
+            } else {
+                currentStateTime = 0;
+                show_title_layer();
+                satellite_state = STATE_TITLE;
+            }
+            break;
+        case STATE_TITLE:
+            if (currentStateTime < state_times[STATE_TITLE]) {
+                currentStateTime += TIMER_PERIOD;
+            } else {
+                currentStateTime = 0;
+                hide_title_layer();
+                satellite_state = STATE_BLANK_1;
+                updatePeriod = 4;
+            }
+            break;
+        case STATE_BLANK_1:
+            if (currentStateTime < state_times[STATE_BLANK_1]) {
+                currentStateTime += TIMER_PERIOD;
+            } else {
+                currentStateTime = 0;
+                show_scroll_layer();
+                satellite_state = STATE_POEM;
+                updatePeriod = 6;
+            }
+
+            break;
+        case STATE_POEM:
+
+            // Before scrolling, we could probably change our updatePeriod
+            // to something different than the other periods
+            if (currentStateTime < state_times[STATE_POEM]) {
+                currentStateTime += TIMER_PERIOD;
+            } else {
+                scroll_poem();
+                currentStateTime = 0;
+            }
+
+
+            break;
+        case STATE_BLANK_2:
+            if (currentStateTime < state_times[STATE_BLANK_2]) {
+                currentStateTime += TIMER_PERIOD;
+            } else {
+                currentStateTime = 0;
+                satellite_state = STATE_START;
+                updatePeriod = 4;
+            }
+
+            break;
+        
+    }
+
+
+
+    // Register timer for next period
+    stateTimer = app_timer_register(TIMER_PERIOD, (AppTimerCallback) stateTimerCallback, NULL);
+}
+
+
 /*
  * Main handler for moving through our state machine, updating time, etc.
  */
 static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) {
 
     // Update every updatePeriod seconds
+    // We will probably be able to delete the following given our refactoring
+    /*
     if (tick_time->tm_sec % updatePeriod == 0) {
         
         APP_LOG(APP_LOG_LEVEL_INFO, "Current state: %d", satellite_state);
@@ -212,6 +305,7 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
                     current_period = 0;
                     show_title_layer();
                     satellite_state = STATE_TITLE;
+                    updatePeriod = 6;
                 }
                 break;
             case STATE_TITLE:
@@ -221,6 +315,7 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
                     current_period = 0;
                     hide_title_layer();
                     satellite_state = STATE_BLANK_1;
+                    updatePeriod = 4;
                 }
                 break;
             case STATE_BLANK_1:
@@ -230,6 +325,7 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
                     current_period = 0;
                     show_scroll_layer();
                     satellite_state = STATE_POEM;
+                    updatePeriod = 6;
                 }
 
                 break;
@@ -246,6 +342,7 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
                 } else {
                     current_period = 0;
                     satellite_state = STATE_START;
+                    updatePeriod = 4;
                 }
 
                 break;
@@ -253,6 +350,7 @@ static void tick_handler_seconds(struct tm *tick_time, TimeUnits units_changed) 
         }
 
     } 
+    */
 
     // Update time every minute    
     if (tick_time->tm_sec % 60 == 0) {
@@ -385,6 +483,9 @@ static void main_window_load(Window *window) {
 
     // Create default title
     snprintf(title_layer_buffer, sizeof(title_layer_buffer), "%s", default_title);
+
+    // Register state timer callback
+    stateTimer = app_timer_register(TIMER_PERIOD, (AppTimerCallback) stateTimerCallback, NULL);
 }
 
 /*
@@ -408,6 +509,8 @@ static void main_window_unload(Window *window) {
     text_layer_destroy(s_title_layer);
     fonts_unload_custom_font(s_title_font);
 
+    // Destroy timer
+    app_timer_cancel(stateTimer);
 }
 
 /*
