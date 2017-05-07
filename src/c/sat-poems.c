@@ -70,7 +70,7 @@ static int descenderSize = 6; // in pixels (?)
 static int numLines = 5; // total number of lines we'd like to display on screen at this font size
 int scrollSize, pageScroll;
 
-//Keeping track of state time
+// Keeping track of state time
 AppTimer *stateTimer; // Timer for checking our state
 int currentStateTime = 0; // Counter for keeping track of time
 
