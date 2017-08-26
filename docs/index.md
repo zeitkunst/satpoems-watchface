@@ -3,3 +3,5 @@
 This is some text.
 
 ## A lower heading
+
+Just some other text too.
