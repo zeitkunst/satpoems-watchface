@@ -1,9 +1,9 @@
 # EL 20 DEGREES
 
-    The earth slows the payload above the ground
-    Understand its name, "INTERCOSMOS 24"
-    Thrown to the heavens upon fire a long time ago
-    It will be reduced to dust.
+The earth slows the payload above the ground
+Understand its name, "INTERCOSMOS 24"
+Thrown to the heavens upon fire a long time ago
+It will be reduced to dust.
 
 <em>Poem generated on July 20, 2017, at 6:50 in the morning, here:</em>
 
